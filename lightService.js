@@ -1,67 +1,66 @@
 angular.module("intersection").service("lightService", function(trafficService) {
 
-  //create button to stop everything
+  let stop = false;
 
-  var lightColors = {};
+  this.makeStop = () => {
+    stop = true;
+  }
 
-  this.NS = () => {
-    lightColors.NS = "green";
-    lightColors.nsLeft = "flashing orange";
-    trafficService.drive("n/s");
-    console.log("N/S", lightColors.NS, "nsLeft", lightColors.nsLeft);
-    setTimeout(() => {
-      lightColors.NS = "yellow";
-      lightColors.nsLeft = "yellow";
-      console.log("N/S", lightColors.NS, "nsLeft", lightColors.nsLeft);
+  let lightColors = {};
+
+  let NS = "ns", EW = "ew", count = 1, direction = "";
+
+  this.changeLights = () => {
+    if (count % 3 === 0) return leftTurnLights();
+    else if (count % 2 === 0) direction = NS;
+    else direction = EW;
+
+    let lightColor = lightColors[direction],
+        leftArrow = lightColors[direction + "Left"];
+
+    if (!stop) {
+      lightColor = "green", leftArrow = "flashing orange";
+      trafficService.drive(direction);
+      console.log(direction, lightColor, "left", leftArrow);
       setTimeout(() => {
-        trafficService.stop();
-        lightColors.NS = "red";
-        lightColors.nsLeft = "red";
-        console.log("N/S", lightColors.NS, "nsLeft", lightColors.nsLeft);
+        lightColor = leftArrow = "yellow";
+        console.log(direction, lightColor, "left", leftArrow);
         setTimeout(() => {
-          leftTurnLights();
-        }, 500);
-      }, 1000);
-    }, 3000);
-  };
+          trafficService.stop();
+          lightColor = leftArrow = "red";
+          console.log(direction, lightColor, "left", leftArrow);
+          setTimeout(() => {
+            count++;
+            this.changeLights();
+          }, 500);
+        }, 1000);
+      }, 3000);
+    } else {
+      console.log("traffic stopped");
+    }
+  }
 
-  var leftTurnLights = () => {
-    lightColors.leftTurn = "green";
-    trafficService.drive("leftTurn");
-    console.log("leftTurn", lightColors.leftTurn);
-    setTimeout(() => {
-      lightColors.leftTurn = "yellow";
+  let leftTurnLights = () => {
+    if (!stop) {
+      lightColors.leftTurn = "green";
+      trafficService.drive("leftTurn");
       console.log("leftTurn", lightColors.leftTurn);
       setTimeout(() => {
-        trafficService.stop();
-        lightColors.leftTurn = "red";
+        lightColors.leftTurn = "yellow";
         console.log("leftTurn", lightColors.leftTurn);
         setTimeout(() => {
-          this.EW();
-        }, 500);
-      }, 1000);
-    }, 3000);
-  };
-
-  this.EW = () => {
-    lightColors.EW = "green";
-    lightColors.ewLeft = "flashing orange";
-    trafficService.drive("e/w");
-    console.log("E/W", lightColors.EW, "ewLeft", lightColors.ewLeft);
-    setTimeout(() => {
-      lightColors.EW = "yellow";
-      lightColors.ewLeft = "yellow";
-      console.log("E/W", lightColors.EW, "ewLeft", lightColors.ewLeft);
-      setTimeout(() => {
-        trafficService.stop();
-        lightColors.EW = "red";
-        lightColors.ewLeft = "red";
-        console.log("E/W", lightColors.EW, "ewLeft", lightColors.ewLeft);
-        setTimeout(() => {
-          this.NS();
-        }, 500);
-      }, 1000);
-    }, 3000);
+          trafficService.stop();
+          lightColors.leftTurn = "red";
+          console.log("leftTurn", lightColors.leftTurn);
+          setTimeout(() => {
+            count++;
+            this.changeLights();
+          }, 500);
+        }, 1000);
+      }, 3000);
+    } else {
+      console.log("traffic stopped");
+    }
   };
 
 }); //end service
